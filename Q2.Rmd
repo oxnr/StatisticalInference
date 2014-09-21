@@ -25,29 +25,24 @@ Use confidence intervals and hypothesis tests to compare tooth growth by supp an
 State your conclusions and the assumptions needed for your conclusions. 
 
 ###About the data
-The response is the length of odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery methods (orange juice or ascorbic acid). A data frame with 60 observations on 3 variables
+The response is the length of odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with each of two delivery methods (orange juice or ascorbic acid). A data frame with 60 observations on 3 variables. (taken from `?ToothGrowth` in R)
 ```{r exploratory, echo=FALSE}
-head(ToothGrowth)
 summary(ToothGrowth)
 
 ##aggregate data
 ToothGrowth.Summary <- ddply(ToothGrowth,.(dose,supp),summarise,len.avg=mean(len))
         
-g <- ggplot(data=ToothGrowth, aes(x=factor(dose), y=len, fill=factor(supp))) +
+ggplot(data=ToothGrowth, aes(x=factor(dose), y=len, fill=factor(supp))) +
         facet_grid(. ~ supp) +
-       ## geom_bar(stat="identity") +
-        geom_violin(col = "black", size = 2) +
-        
+        geom_violin(col = "black", size = 1) +
         ylab('Tooth Length') + 
         xlab('dose (mg)') + 
         ggtitle('Tooth Length per supplement type and dosage (mg)')
-g
 
 
-g <- ggplot(data=ToothGrowth, aes(x = factor(supp), y = len, group = factor(dose))) +
+ggplot(data=ToothGrowth, aes(x = factor(supp), y = len, group = factor(dose))) +
         geom_line(size = 1, aes(colour = dose)) + 
         geom_point(size =10, pch = 21, fill = "salmon", alpha = .5)
-g
 
 ```
 
@@ -56,35 +51,86 @@ Interpreting the first graph we can see that the Orange Juice (OJ) supplement at
 
 ###Testing
 
-####Assumptions
-
-* The variances are different for the populations
-
 ####Analysis
+#####Test 1
 Use confidence intervals and hypothesis tests to compare tooth growth by supp and dose. 
+First test is to test the data only looking at the supplement and not dosage
 ```{r C_Supp}
 
 t.test(len ~ supp, paired = F,var.equal=F, data = ToothGrowth)
 ```
+The interval contains the zero value, we cannot reject the null hypothesis that there isn't a significant difference in tooth length betwen OJ and VC supplement types.
 
-We cannot reject the null hypothesis as there are a significant difference in tooth length betwen OJ and VC supplement types.
 
-Lets look at it for specific dosages
+#####Test 2
+Lets compare specific dosage levels and see if we notice a significant tooth growth difference. We will test 0.5mg, 1mg and 2mg independently. We create 3 different subsets of the data and do t level tests for each one.
 ```{r C_Dose}
 tooth.D05 <- subset(ToothGrowth, dose == 0.5)
 tooth.D1 <- subset(ToothGrowth, dose == 1.0)
 tooth.D2 <- subset(ToothGrowth, dose == 2.0)
+```
+
+```{r C_Dose_Results, echo=FALSE}
+p.D05<- t.test(len ~ supp, paired = F, var.equal= F,data = tooth.D05)$p.value
+p.D01 <- t.test(len ~ supp, paired = F, var.equal= F,data = tooth.D1)$p.value
+p.D02 <- t.test(len ~ supp, paired = F, var.equal= F,data = tooth.D2)$p.value
+
+
+e.D02 <- t.test(len ~ supp, paired = F, var.equal= F,data = tooth.D2)$estimate
+
 
 rbind(        
-c('0.5mg conf interval',t.test(len ~ supp, paired = F, var.equal= F,data = tooth.D05)$conf),
-c('1.0mg conf interval',t.test(len ~ supp, paired = F, var.equal= F,data = tooth.D1)$conf),
-c('2.0mg conf interval',t.test(len ~ supp, paired = F, var.equal= F,data = tooth.D2)$conf)
+c('0.5mg conf interval',t.test(len ~ supp, paired = F, var.equal= F,data = tooth.D05)$conf.int),
+c('1.0mg conf interval',t.test(len ~ supp, paired = F, var.equal= F,data = tooth.D1)$conf.int),
+c('2.0mg conf interval',t.test(len ~ supp, paired = F, var.equal= F,data = tooth.D2)$conf.int)
+)
+
+rbind(        
+c('0.5mg mean est',t.test(len ~ supp, paired = F, var.equal= F,data = tooth.D05)$estimate),
+c('1.0mg mean est',t.test(len ~ supp, paired = F, var.equal= F,data = tooth.D1)$estimate),
+c('2.0mg mean est',t.test(len ~ supp, paired = F, var.equal= F,data = tooth.D2)$estimate)
+)
+
+
+```
+At 2mg the p-value is `r p.D02`, we cannot reject the null hypothesis that there isnt a difference in tooth length. The interval also containst 0.  For the other two tests at 0.5 and 1mg we can reject the null hypothesis. The mean estimate also shows significant differences betwen OJ and VC at the lower dosage levels.
+
+
+#####Test 3
+Lets test the differences in dosage levels and see if we notice a significant tooth growth difference. 
+We will subset the dataset and test 0.5mg with  1mg and 2mg then 1mg with 2mg. 
+```{r C_Dose2}
+tooth.D05_01 <- subset(ToothGrowth, dose %in% c(0.5,1.0))
+tooth.D05_02 <- subset(ToothGrowth, dose %in% c(0.5,2.0))
+tooth.D01_02 <- subset(ToothGrowth, dose %in% c(1.0,2.0))
+```
+
+```{r C_Dose2_Results,echo=FALSE}
+p.D05_01 <- t.test(len ~ dose, paired = F, var.equal= F,data = tooth.D05_01)$p.value
+p.D05_02 <- t.test(len ~ dose, paired = F, var.equal= F,data = tooth.D05_02)$p.value
+p.D01_02 <- t.test(len ~ dose, paired = F, var.equal= F,data = tooth.D01_02)$p.value
+
+rbind(
+c('Description','Confidence Interval Lower', 'Confidence Interval Upper'),
+c('0.5mg-1mg',t.test(len ~ dose, paired = F, var.equal= F,data = tooth.D05_01)$conf.int),
+c('0.5mg-2mg',t.test(len ~ dose, paired = F, var.equal= F,data = tooth.D05_02)$conf.int),
+c('1mg-2mg',t.test(len ~ dose, paired = F, var.equal= F,  data = tooth.D01_02)$conf.int)
 )
 
 ```
+The p-values for all 3 tests (`r p.D05_01`,  `r p.D05_02`,  `r p.D01_02`) was very small and therefore we can reject the null hypothesis that there isnt a significant difference. The higher dosage level in each test resulted in a longer tooth length.
 
-###In Conclusion:
-If we ignore the supplement types and just look at the difference in dosages we notice we can reject the null hypothesis for 0.5 and 1.0mg levels and not for the 2.0mg level. for the 2.0mg there is a significant difference in tooth length. 
+###Conclusion:
+We have conducted three different tests and found the following
+
+* When ignoring dose levels: No significant difference in tooth length noted
+* Taking dosage and supplement into account: Orange Juice (OJ) resulted in increased tooth length at lower dosage levels with a insignificant difference in length between OJ and VC at the 2mg dosage.
+* When ignoring supplement type: Higher dose levels had a significant impact on tooth length. There is also a significant impact between the different dosages
+
+###Assumptions
+* No other outside factor had a significant impact on the study.
+* The variances are different for the seperate populations.
 
 
-Full markdown file:
+The full report including all R code:
+[https://github.com/JacquesBot/StatisticalInference/blob/master/Q2.md]("https://github.com/JacquesBot/StatisticalInference/blob/master/Q2.md")

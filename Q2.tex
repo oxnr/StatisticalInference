@@ -122,17 +122,8 @@ conclusions.
 The response is the length of odontoblasts (teeth) in each of 10 guinea
 pigs at each of three dose levels of Vitamin C (0.5, 1, and 2 mg) with
 each of two delivery methods (orange juice or ascorbic acid). A data
-frame with 60 observations on 3 variables
-
-\begin{verbatim}
-##    len supp dose
-## 1  4.2   VC  0.5
-## 2 11.5   VC  0.5
-## 3  7.3   VC  0.5
-## 4  5.8   VC  0.5
-## 5  6.4   VC  0.5
-## 6 10.0   VC  0.5
-\end{verbatim}
+frame with 60 observations on 3 variables. (taken from
+\texttt{?ToothGrowth} in R)
 
 \begin{verbatim}
 ##       len       supp         dose     
@@ -156,18 +147,13 @@ working equally well.
 
 \subsubsection{Testing}\label{testing}
 
-\paragraph{Assumptions}\label{assumptions}
-
-\begin{itemize}
-\itemsep1pt\parskip0pt\parsep0pt
-\item
-  The variances are different for the populations
-\end{itemize}
-
 \paragraph{Analysis}\label{analysis}
 
+\subparagraph{Test 1}\label{test-1}
+
 Use confidence intervals and hypothesis tests to compare tooth growth by
-supp and dose.
+supp and dose. First test is to test the data only looking at the
+supplement and not dosage
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -189,22 +175,22 @@ supp and dose.
 ##            20.66            16.96
 \end{verbatim}
 
-We cannot reject the null hypothesis as there are a significant
-difference in tooth length betwen OJ and VC supplement types.
+The interval contains the zero value, we cannot reject the null
+hypothesis that there isn't a significant difference in tooth length
+betwen OJ and VC supplement types.
 
-Lets look at it for specific dosages
+\subparagraph{Test 2}\label{test-2}
+
+Lets compare specific dosage levels and see if we notice a significant
+tooth growth difference. We will test 0.5mg, 1mg and 2mg independently.
+We create 3 different subsets of the data and do t level tests for each
+one.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{tooth.D05 <-}\StringTok{ }\KeywordTok{subset}\NormalTok{(ToothGrowth, dose ==}\StringTok{ }\FloatTok{0.5}\NormalTok{)}
 \NormalTok{tooth.D1 <-}\StringTok{ }\KeywordTok{subset}\NormalTok{(ToothGrowth, dose ==}\StringTok{ }\FloatTok{1.0}\NormalTok{)}
 \NormalTok{tooth.D2 <-}\StringTok{ }\KeywordTok{subset}\NormalTok{(ToothGrowth, dose ==}\StringTok{ }\FloatTok{2.0}\NormalTok{)}
-
-\KeywordTok{rbind}\NormalTok{(        }
-\KeywordTok{c}\NormalTok{(}\StringTok{'0.5mg conf interval'}\NormalTok{,}\KeywordTok{t.test}\NormalTok{(len ~}\StringTok{ }\NormalTok{supp, }\DataTypeTok{paired =} \NormalTok{F, }\DataTypeTok{var.equal=} \NormalTok{F,}\DataTypeTok{data =} \NormalTok{tooth.D05)$conf),}
-\KeywordTok{c}\NormalTok{(}\StringTok{'1.0mg conf interval'}\NormalTok{,}\KeywordTok{t.test}\NormalTok{(len ~}\StringTok{ }\NormalTok{supp, }\DataTypeTok{paired =} \NormalTok{F, }\DataTypeTok{var.equal=} \NormalTok{F,}\DataTypeTok{data =} \NormalTok{tooth.D1)$conf),}
-\KeywordTok{c}\NormalTok{(}\StringTok{'2.0mg conf interval'}\NormalTok{,}\KeywordTok{t.test}\NormalTok{(len ~}\StringTok{ }\NormalTok{supp, }\DataTypeTok{paired =} \NormalTok{F, }\DataTypeTok{var.equal=} \NormalTok{F,}\DataTypeTok{data =} \NormalTok{tooth.D2)$conf)}
-\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -215,13 +201,76 @@ Lets look at it for specific dosages
 ## [3,] "2.0mg conf interval" "-3.79807046333516" "3.63807046333515"
 \end{verbatim}
 
-\subsubsection{In Conclusion:}\label{in-conclusion}
+\begin{verbatim}
+##                       mean in group OJ mean in group VC
+## [1,] "0.5mg mean est" "13.23"          "7.98"          
+## [2,] "1.0mg mean est" "22.7"           "16.77"         
+## [3,] "2.0mg mean est" "26.06"          "26.14"
+\end{verbatim}
 
-If we ignore the supplement types and just look at the difference in
-dosages we notice we can reject the null hypothesis for 0.5 and 1.0mg
-levels and not for the 2.0mg level. for the 2.0mg there is a significant
-difference in tooth length.
+At 2mg the p-value is 0.9639, we cannot reject the null hypothesis that
+there isnt a difference in tooth length. The interval also containst 0.
+For the other two tests at 0.5 and 1mg we can reject the null
+hypothesis. The mean estimate also shows significant differences betwen
+OJ and VC at the lower dosage levels.
 
-Full markdown file:
+\subparagraph{Test 3}\label{test-3}
+
+Lets test the differences in dosage levels and see if we notice a
+significant tooth growth difference. We will subset the dataset and test
+0.5mg with 1mg and 2mg then 1mg with 2mg.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tooth.D05_01 <-}\StringTok{ }\KeywordTok{subset}\NormalTok{(ToothGrowth, dose %in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\FloatTok{0.5}\NormalTok{,}\FloatTok{1.0}\NormalTok{))}
+\NormalTok{tooth.D05_02 <-}\StringTok{ }\KeywordTok{subset}\NormalTok{(ToothGrowth, dose %in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\FloatTok{0.5}\NormalTok{,}\FloatTok{2.0}\NormalTok{))}
+\NormalTok{tooth.D01_02 <-}\StringTok{ }\KeywordTok{subset}\NormalTok{(ToothGrowth, dose %in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\FloatTok{1.0}\NormalTok{,}\FloatTok{2.0}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##      [,1]          [,2]                        [,3]                       
+## [1,] "Description" "Confidence Interval Lower" "Confidence Interval Upper"
+## [2,] "0.5mg-1mg"   "-11.9837812579016"         "-6.27621874209841"        
+## [3,] "0.5mg-2mg"   "-18.1561665388306"         "-12.8338334611694"        
+## [4,] "1mg-2mg"     "-8.99648051689202"         "-3.73351948310799"
+\end{verbatim}
+
+The p-values for all 3 tests (1.2683 × 10-7, 4.3975 × 10-14, 1.9064 ×
+10-5) was very small and therefore we can reject the null hypothesis
+that there isnt a significant difference. The higher dosage level in
+each test resulted in a longer tooth length.
+
+\subsubsection{Conclusion:}\label{conclusion}
+
+We have conducted three different tests and found the following
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  When ignoring dose levels: No significant difference in tooth length
+  noted
+\item
+  Taking dosage and supplement into account: Orange Juice (OJ) resulted
+  in increased tooth length at lower dosage levels with a insignificant
+  difference in length between OJ and VC at the 2mg dosage.
+\item
+  When ignoring supplement type: Higher dose levels had a significant
+  impact on tooth length. There is also a significant impact between the
+  different dosages
+\end{itemize}
+
+\subsubsection{Assumptions}\label{assumptions}
+
+\begin{itemize}
+\itemsep1pt\parskip0pt\parsep0pt
+\item
+  No other outside factor had a significant impact on the study.
+\item
+  The variances are different for the seperate populations.
+\end{itemize}
+
+The full report including all R code:
+\href{}{\url{https://github.com/JacquesBot/StatisticalInference/blob/master/Q2.md}}
 
 \end{document}

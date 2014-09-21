@@ -4,11 +4,16 @@ title: 'Statistical Inference: Exponential Distribution Simulation'
 author: "Jacques Botes"
 date: "September 2014"
 output:
-  pdf_document: default
+  pdf_document:
+    fig_width: 5
+    keep_tex: yes
   html_document:
     fig_caption: yes
     keep_md: yes
 ---
+```{r Libraries, echo=FALSE, results='hold',warning=FALSE,}
+require(ggplot2)
+```
 ##Problem Statement
 The exponential distribution can be simulated in R with `rexp(n, lambda)` where lambda is the rate parameter. The mean of exponential distribution is 1/lambda and the standard deviation is also also 1/lambda. 
 Set lambda = 0.2 for all of the simulations. In this simulation, you will investigate the distribution of averages of 40 exponential(0.2)s. Note that you will need to do a thousand or so simulated averages of 40 exponentials.
@@ -17,12 +22,9 @@ Set lambda = 0.2 for all of the simulations. In this simulation, you will invest
 2. Show how variable it is and compare it to the theoretical variance of the distribution.
 3. Show that the distribution is approximately normal.
 4. Evaluate the coverage of the confidence interval for $1/\lambda = \bar{X} \pm 1.96 \frac{S}{\sqrt{n}}$.
-```{r Libraries, echo=FALSE, results='hold',warning=FALSE,}
-require(ggplot2)
-```
 
 First setup the simulation and get the means of the 1000 simulations
-```{r Setup_Simulation, echo=FALSE}
+```{r Setup_Simulation}
 set.seed(9867)
 n <- 1000        ## no of runs
 sample.size <- 40 ## 40 samples in each run
@@ -32,7 +34,7 @@ dist.means <- rowMeans(dist) ##a  vector of n length with averages in each row b
 ```
 
 1. Show where the distribution is centered at and compare it to the theoretical center of the distribution.
-```{r Q1}
+```{r Q1, echo=FALSE}
 hist(dist.means,breaks=sample.size,prob=T,col="green",main="Density of means",ylab="density")
 abline(v=mean(dist.means),col="black",lwd=4)
 
@@ -55,21 +57,25 @@ Standard Deviation of the distribution is `r sd.ac` with the theoretical SD calc
 The Theoretical variance is calculated as $(\frac{1}{\lambda} * \frac{1}{\sqrt{n}})^2$ = `r var.th`. Actual variance of the distribution is `r var.ac`
 
 3. Show that the distribution is approximately normal.
-```{r Q3}
+
+```{r Q3, echo=FALSE}
 xfit <- seq(min(dist.means), max(dist.means), length=100)
 yfit <- dnorm(xfit, mean=1/lambda, sd=(1/lambda/sqrt(sample.size)))
 hist(dist.means,breaks=sample.size,prob=T,col="green",main="Density of means",ylab="density")
 lines(xfit, yfit, pch=22, col="black", lty=5)
+```
 
+
+```{r Q3_2, echo=FALSE}
 qqnorm(dist.means,col="red" ) #normal QQ plot
 qqline(dist.means,lwd=3) ##theoretical line
 ```
 
 In the first plot we have overlayed a normal distribution (in black) over the density plot taken from the means of the exponential distribution. To confirm the distribution we use a qqnorm plot and overlay the theoretical line.
-We notice on teh QQ plot that most of the red is on the theoretical normal line and only deviates at the begging and end due to the skewness of the exponential distribution.
+We notice in the QQ plot that most of the red is on the theoretical normal line and only deviates at the begninning and end due to the skewness of the exponential distribution.
 
 
-```{r Q4}
+```{r Q4, echo=FALSE}
 
 lambda_vals <- seq(4, 6, by=0.01) ##we know the center is around 5
 coverage <- sapply(lambda_vals, function(x) {
@@ -89,4 +95,10 @@ ggplot(data.frame(lambda_vals, coverage),
         geom_vline(xintercept=v,col="green")
 ```
 The interval above 95% is between `r v` and is depicted in the plot above using the green lines. The red line shows the 95% confidence interval line
+
+
+The full report including all R code:
+[https://github.com/JacquesBot/StatisticalInference/blob/master/Q1.md]("https://github.com/JacquesBot/StatisticalInference/blob/master/Q1.md")
+
+
 
